@@ -64,9 +64,6 @@ class InMemory(Storage):
         return InMemory.all_books
 
 
-    def add_up(a,b):
-        return a+b
-
 # print(add_up(1,2))
 # a=InMemory()
 # b=InMemory()
