@@ -4,12 +4,12 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from reader_storage import Storage
 
-db = create_engine('postgresql://postgres:pass@localhost/all_books')
-db.connect()
-base = declarative_base()
 
-class MyBook(base):
-    __tablename__ = 'mybooks'
+db = create_engine('postgresql://postgres:pass@localhost/all_books')
+Base = declarative_base()
+
+class MyBooks(Base):
+    __tablename__ = 'mybookss'
 
     ids = Column(String, primary_key=True)
     title = Column(String)
@@ -19,19 +19,17 @@ class MyBook(base):
 Session = sessionmaker(db)  
 session = Session()
 
-base.metadata.create_all(db)
+# Base.metadata.create_all(db)
 
 class Postgres(Storage):
-
-
     book_counter = 0
 
     def __init__(self):
         self.book_record = []
         self.book = {}
-
-
-    
+        self.connection = db.connect()
+        Base.metadata.create_all(db)
+   
     def create(self,**kwargs):
 
         ids=kwargs['id']
@@ -123,5 +121,5 @@ a=Postgres()
 # print(a.create(id=9,author='sola',title='kemi'))
 # print(a.fetch(id='1'))
 # print(a.delete(id='1'))
-print(a.delete(author='Aka',title ='Python Introduction'))
+# print(a.delete(author='Aka',title ='Python Introduction'))
 
