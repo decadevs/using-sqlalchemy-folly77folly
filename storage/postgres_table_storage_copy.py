@@ -8,12 +8,12 @@ from reader_storage import Storage
 db = create_engine('postgresql://postgres:pass@localhost/all_books')
 Base = declarative_base()
 
-class MyBooks(Base):
-    __tablename__ = 'mybookss'
+class MyBook(Base):
+    __tablename__ = 'allmybooks'
 
-    ids = Column(String, primary_key=True)
-    title = Column(String)
+    id = Column(Integer, primary_key=True)
     author = Column(String)
+    title = Column(String)
 
 #creating a session/connection with engine
 Session = sessionmaker(db)  
@@ -30,35 +30,37 @@ class Postgres(Storage):
         self.connection = db.connect()
         Base.metadata.create_all(db)
    
-    def create(self,**kwargs):
+    def create(self, **kwargs):
 
-        ids=kwargs['id']
+        id=kwargs['id']
         t=kwargs['title']
         a=kwargs['author']
-        abook= MyBook(ids=ids, title = t, author = a)  
+        abook= MyBook(id=id, title = t, author = a)  
         session.add(abook)  
         session.commit()        
     
+
     def fetch(self, **kwargs):
 
         if  'id' in kwargs and len(kwargs) == 1 :
-            idn = kwargs['id']
-            result = session.query(MyBook).filter_by(ids = idn)
+            id = kwargs['id']
+            result = session.query(MyBook).filter_by(id = id)
             if result:
                 for book in result:
-                    self.book['id'] = book.ids
+                    self.book['id'] = book.id
                     self.book['title'] = book.title
                     self.book['author'] = book.author
                     self.book_record.append(self.book)
                 return self.book_record
             return 'No Record Found'
 
+
         if  'title' in kwargs and len(kwargs) == 1 :
             title = kwargs['title']
             result = session.query(MyBook).filter_by(title = title)
             if result:
                 for book in result:
-                    self.book['id'] = book.ids
+                    self.book['id'] = book.id
                     self.book['title'] = book.title
                     self.book['author'] = book.author
                     self.book_record.append(self.book)
@@ -71,7 +73,7 @@ class Postgres(Storage):
             result = session.query(MyBook).filter_by(author = author)
             if result:
                 for book in result:
-                    self.book['id'] = book.ids
+                    self.book['id'] = book.id
                     self.book['title'] = book.title
                     self.book['author'] = book.author
                     self.book_record.append(self.book)
@@ -82,8 +84,8 @@ class Postgres(Storage):
     def delete(self, **kwargs):
 
         if  'id' in kwargs and len(kwargs) == 1:
-            idn = kwargs['id']
-            for book in session.query(MyBook).filter_by(ids = idn):
+            id = kwargs['id']
+            for book in session.query(MyBook).filter_by(id = id):
                 session.delete(book)
                 session.commit()
                 return 'delete successful'                
