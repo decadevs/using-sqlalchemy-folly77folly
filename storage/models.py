@@ -9,3 +9,4 @@ class AllBooks(base):
     ids = Column(String, primary_key=True)
     title = Column(String)
     author = Column(String)
+
