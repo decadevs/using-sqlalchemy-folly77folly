@@ -2,7 +2,7 @@ from sqlalchemy import create_engine
 from sqlalchemy import Column, String, Integer
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
-from reader_storage import Storage
+from .reader_storage import Storage
 
 
 db = create_engine('postgresql://postgres:pass@localhost/all_books')
@@ -15,10 +15,6 @@ class MyBook(Base):
     author = Column(String)
     title = Column(String)
 
-#creating a session/connection with engine
-Session = sessionmaker(db)  
-session = Session()
-
 # Base.metadata.create_all(db)
 
 class Postgres(Storage):
@@ -30,7 +26,11 @@ class Postgres(Storage):
         self.id = None
         self.title = None
         self.author = None
-        self.connection = db.connect()
+        
+        #creating a session/connection with engine
+        Session = sessionmaker(db)
+        self.session = Session()
+
         Base.metadata.create_all(db)
    
 
@@ -38,35 +38,45 @@ class Postgres(Storage):
         self.id=kwargs['id']
         self.title=kwargs['title']
         self.author=kwargs['author']
+        session = self.session
+    
         result = session.query(MyBook).filter(MyBook.id == self.id)
+
+
         for row in result:
             if row.id:
-                print(row.id)
                 return 'id already exists'
+
         abook= MyBook(id=self.id, title = self.title, author = self.author)  
         session.add(abook)  
         session.commit()
-        return self.fetch(id = self.id)
-        # return 'record inserted'
+    
+        return 'insert record sucessful'
+
         
     
 
     def fetch(self, **kwargs):
-
+        session = self.session
         if  'id' in kwargs and len(kwargs) == 1 :
             self.id = kwargs['id']
+
             result = session.query(MyBook).filter_by(id = self.id)
+            
             if result:
-                for book in result:
-                    self.book['id'] = book.id
-                    self.book['title'] = book.title
-                    self.book['author'] = book.author
+                for row in result:
+                    self.book['id'] = row.id
+                    self.book['title'] = row.title
+                    self.book['author'] = row.author
                     self.book_record.append(self.book)
                 return self.book_record
-            return 'No Record Found'
+
+            
+            return 'Something went wrong'
 
 
         if  'title' in kwargs and len(kwargs) == 1 :
+            session = self.session
             self.title = kwargs['title']
             result = session.query(MyBook).filter_by(title = self.title)
             if result:
@@ -80,6 +90,7 @@ class Postgres(Storage):
 
 
         if  'author' in kwargs and len(kwargs) == 1:
+            session = self.session
             self.author = kwargs['author']
             result = session.query(MyBook).filter_by(author = self.author)
             if result:
@@ -93,17 +104,18 @@ class Postgres(Storage):
 
 
     def delete(self, **kwargs):
-
+        session = self.session
         if  'id' in kwargs and len(kwargs) == 1:
             self.id = kwargs['id']
             for book in session.query(MyBook).filter_by(id = self.id):
                 session.delete(book)
                 session.commit()
-                return self.fetch(id = self.id)      
+                return 'delete successful'     
             return 'no record found'
 
 
         if  'author' in kwargs and len(kwargs) == 1:
+            session = self.session
             self.author = kwargs['author']
             for book in session.query(MyBook).filter_by(author = self.author):
                 session.delete(book)
@@ -112,6 +124,7 @@ class Postgres(Storage):
             return 'no record found'
 
         if  'title' and  'author' in kwargs  and len(kwargs) == 2:
+            session = self.session
             self.title = kwargs['title']
             self.author = kwargs['author']
             for book in session.query(MyBook).filter_by(author = self.author).filter_by(title = self.title):
@@ -122,6 +135,7 @@ class Postgres(Storage):
 
 
     def fetch_all(self):
+        session = self.session
         books = session.query(MyBook).all()
         for book in books :
             self.book['id'] = book.id
@@ -129,16 +143,4 @@ class Postgres(Storage):
             self.book['title'] = book.title
             self.book_record.append(self.book)
         return self.book_record
-           
-
-
-# print(add_up(1,2))
-# a=Postgres()
-# b=InMemory()
-# print(a.create(id=8,author='Aka', title='Python Introduction'))
-# print(a.create(id=29,author='sola',title='The begining of snake'))
-# print(a.fetch(id='1'))
-# print(a.delete(id='1'))
-# print(a.delete(author='Aka',title ='Python Introduction'))
-# print(a.fetch_all())
 
